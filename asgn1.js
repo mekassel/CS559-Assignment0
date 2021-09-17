@@ -20,17 +20,23 @@ Draws a dice on the canvas from point (x, y) on a
 canvas to its size, with the dice number specified.
 The color of the dice number can 
 */
-function drawDice( x,  y,  size, number, color) {
+function drawDice( x,  y,  size, number, color, rotation, centered = false) {
+    if(!centered) {
+       context.translate(size/2,size/2); 
+    }
+    context.translate(x,y);
+    context.rotate(rotation);
+    context.translate(-size/2, - size/2);
     //Draw outer dice
     context.strokeStyle = "black"; 
     context.lineWidth = Math.sqrt(size)/5;
     var diceScale = size/4;
     var circleSize = diceScale/3;
     context.beginPath();
-    context.arc(x + diceScale, y + diceScale, diceScale,  -Math.PI , -Math.PI / 2, false);
-    context.arc(x + size - diceScale, y + diceScale, diceScale,  -Math.PI / 2, 0, false);
-    context.arc(x + size - diceScale, y + size - diceScale, diceScale, 0, Math.PI / 2, false);
-    context.arc(x + diceScale, y + size - diceScale, diceScale, Math.PI / 2, - Math.PI, false);
+    context.arc(diceScale, diceScale, diceScale,  -Math.PI , -Math.PI / 2, false);
+    context.arc(size - diceScale, diceScale, diceScale,  -Math.PI / 2, 0, false);
+    context.arc(size - diceScale, size - diceScale, diceScale, 0, Math.PI / 2, false);
+    context.arc(diceScale, size - diceScale, diceScale, Math.PI / 2, - Math.PI, false);
     context.closePath();
     context.stroke();
     //Draw numbers on dice
@@ -41,39 +47,46 @@ function drawDice( x,  y,  size, number, color) {
     context.beginPath();
     switch(number) {
         case 1: 
-            drawCircle(x + size/2, y + size/2, circleSize);
+            drawCircle(size/2, size/2, circleSize);
             break;
         case 2: 
-            drawCircle(x + size/10 * 7, y + size/10 * 7, circleSize);
-            drawCircle(x + size/10 * 3, y + size/10 * 3, circleSize);
+            drawCircle(size/10 * 7, size/10 * 7, circleSize);
+            drawCircle(size/10 * 3, size/10 * 3, circleSize);
             break;
         case 3: 
-            drawCircle(x + size/10 * 8, y + size/10 * 2, circleSize);
-            drawCircle(x + size/10 * 5, y + size/10 * 5, circleSize);
-            drawCircle(x + size/10 * 2, y + size/10 * 8, circleSize);
+            drawCircle(size/10 * 8, size/10 * 2, circleSize);
+            drawCircle(size/10 * 5, size/10 * 5, circleSize);
+            drawCircle(size/10 * 2, size/10 * 8, circleSize);
             break;
         case 4: 
-            drawCircle(x + size/4, y + size/4, circleSize);
-            drawCircle(x + size/4 * 3, y + size/4, circleSize);
-            drawCircle(x + size/4, y + size/4 * 3, circleSize);
-            drawCircle(x + size/4 * 3, y + size/4 * 3, circleSize);
+            drawCircle(size/4, size/4, circleSize);
+            drawCircle(size/4 * 3, size/4, circleSize);
+            drawCircle(size/4, size/4 * 3, circleSize);
+            drawCircle(size/4 * 3, size/4 * 3, circleSize);
             break;
         case 5: 
-            drawCircle(x + size/4, y + size/4, circleSize);
-            drawCircle(x + size/4 * 3, y + size/4, circleSize);
-            drawCircle(x + size/4, y + size/4 * 3, circleSize);
-            drawCircle(x + size/4 * 3, y + size/4 * 3, circleSize);
-            drawCircle(x + size/2, y + size/2, circleSize);
+            drawCircle(size/4, size/4, circleSize);
+            drawCircle(size/4 * 3, size/4, circleSize);
+            drawCircle(size/4, size/4 * 3, circleSize);
+            drawCircle(size/4 * 3, size/4 * 3, circleSize);
+            drawCircle(size/2, size/2, circleSize);
             break;
         case 6: 
             for(var i = 1; i < 4; i++) {
-                drawCircle(x + size/4, y + (size/10) * (3 * i - 1), circleSize);
-                drawCircle(x + size/4 * 3, y + (size/10) * (3 * i - 1), circleSize);
+                drawCircle(size/4, (size/10) * (3 * i - 1), circleSize);
+                drawCircle(size/4 * 3, (size/10) * (3 * i - 1), circleSize);
             }
             break;
     }
     context.stroke();
     context.fill();  
+    
+    context.translate(size/2, size/2);
+    context.rotate(-rotation);
+    context.translate(-x,-y);
+    if(!centered) {
+       context.translate(-size/2,-size/2); 
+    }
 }  
 
 /*
@@ -82,11 +95,13 @@ function drawDice( x,  y,  size, number, color) {
 function drawChangingDiceBackground(){
     for(var i = 0; i < 6; i++) {
         for(var j = 0; j < 6; j++)
-            drawDice(i*canvas.width/6,j * canvas.width/6,canvas.width/6,(frameCount+j+i)%6+1, colors[(j+i)%6]);
+            drawDice(i*canvas.width/6,j * canvas.width/6,canvas.width/6,(frameCount+j+i)%6+1, colors[(j+i)%6],0,false);
+
     }
 }
 
 function drawFirstScene(){
+
 
 }
 
@@ -94,7 +109,7 @@ function draw(){
      context.clearRect(0,0,canvas.width,canvas.height);
      switch(scene) {
          case 0:
-            drawChangingDiceBackground();
+            drawFirstScene();
         break;
          case 1:
             drawChangingDiceBackground();
