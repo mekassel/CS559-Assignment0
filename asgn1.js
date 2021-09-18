@@ -4,118 +4,101 @@ var context = canvas.getContext('2d');
 var colors = ["red","orange","yellow","green","blue","purple"]
 
 var frameCount = 0;
-var scene = 1;
+var scene = 0;
+var scale = 20;
+var   shapes = [
+    [[0,0],[0,1],[1,0],[1,1]], //Square
+    [[0,0],[1,0],[2,0],[3,0]], //Line
+    [[0,0],[0,1],[0,2],[1,2]], //L shape
+];
+//Found how to create classes here:
+//https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
+class Shape {
 
-/*
-Draws a circle on the canvas of a set size
-*/
-function drawCircle(x, y, size, fill){
-    context.moveTo(x, y);
-    context.arc(x, y, size, Math.PI, 0);
-    context.arc(x, y, size, 0, Math.PI);
-}
+  
+   constructor(type, color) {
+    this.squares = shapes[type];
+    this.color = color;
+    this.rotateStep = false;
+  }
 
-/*
-Draws a dice on the canvas from point (x, y) on a 
-canvas to its size, with the dice number specified.
-The color of the dice number can 
-*/
-function drawDice( x,  y,  size, number, color, rotation, centered = false) {
-    if(!centered) {
-       context.translate(size/2,size/2); 
-    }
-    context.translate(x,y);
-    context.rotate(rotation);
-    context.translate(-size/2, - size/2);
-    //Draw outer dice
-    context.strokeStyle = "black"; 
-    context.lineWidth = Math.sqrt(size)/5;
-    var diceScale = size/4;
-    var circleSize = diceScale/3;
-    context.beginPath();
-    context.arc(diceScale, diceScale, diceScale,  -Math.PI , -Math.PI / 2, false);
-    context.arc(size - diceScale, diceScale, diceScale,  -Math.PI / 2, 0, false);
-    context.arc(size - diceScale, size - diceScale, diceScale, 0, Math.PI / 2, false);
-    context.arc(diceScale, size - diceScale, diceScale, Math.PI / 2, - Math.PI, false);
-    context.closePath();
-    context.stroke();
-    //Draw numbers on dice
-    context.strokeStyle = "black"; 
-    context.fillStyle = color;
-    context.lineWidth = Math.sqrt(size)/10;
-    
-    context.beginPath();
-    switch(number) {
-        case 1: 
-            drawCircle(size/2, size/2, circleSize);
-            break;
-        case 2: 
-            drawCircle(size/10 * 7, size/10 * 7, circleSize);
-            drawCircle(size/10 * 3, size/10 * 3, circleSize);
-            break;
-        case 3: 
-            drawCircle(size/10 * 8, size/10 * 2, circleSize);
-            drawCircle(size/10 * 5, size/10 * 5, circleSize);
-            drawCircle(size/10 * 2, size/10 * 8, circleSize);
-            break;
-        case 4: 
-            drawCircle(size/4, size/4, circleSize);
-            drawCircle(size/4 * 3, size/4, circleSize);
-            drawCircle(size/4, size/4 * 3, circleSize);
-            drawCircle(size/4 * 3, size/4 * 3, circleSize);
-            break;
-        case 5: 
-            drawCircle(size/4, size/4, circleSize);
-            drawCircle(size/4 * 3, size/4, circleSize);
-            drawCircle(size/4, size/4 * 3, circleSize);
-            drawCircle(size/4 * 3, size/4 * 3, circleSize);
-            drawCircle(size/2, size/2, circleSize);
-            break;
-        case 6: 
-            for(var i = 1; i < 4; i++) {
-                drawCircle(size/4, (size/10) * (3 * i - 1), circleSize);
-                drawCircle(size/4 * 3, (size/10) * (3 * i - 1), circleSize);
+    drawShape(x, y) {
+        context.strokeStyle=this.color;
+        context.fillStyle = this.color;
+        for(var i = 0; i < this.squares.length;i++) {
+            drawSquare(x + scale*this.squares[i][0],y + scale*this.squares[i][1]);
+        }
+   }
+
+   rotateLeft() {
+       if(this.rotateStep) {
+            for(var i = 0; i < this.squares.length;i++) {
+                var temp = this.squares[i];
+                this.squares[i] = [temp[1],temp[0]];
             }
-            break;
-    }
-    context.stroke();
-    context.fill();  
-    
-    context.translate(size/2, size/2);
-    context.rotate(-rotation);
-    context.translate(-x,-y);
-    if(!centered) {
-       context.translate(-size/2,-size/2); 
-    }
-}  
+        } else {
+            for(var i = 0; i < this.squares.length;i++) {
+                var temp = this.squares[i];
+                this.squares[i] = [2-temp[0],3-temp[1]];
+            }
+        }
+        this.rotateStep = !this.rotateStep;
+   }
 
-/*
-* Draw the dice background!
-*/
-function drawChangingDiceBackground(){
-    for(var i = 0; i < 6; i++) {
-        for(var j = 0; j < 6; j++)
-            drawDice(i*canvas.width/6,j * canvas.width/6,canvas.width/6,(frameCount+j+i)%6+1, colors[(j+i)%6],0,false);
+   rotateRight() {
 
-    }
+   }
+
+   getWidth() {
+       var width = 0;
+
+   }
 }
 
-function drawFirstScene(){
+function drawGrid(x, y, height, width) {
+     context.beginPath();
+     context.strokeStyle = "black";
+     context.lineWidth = 2;
+    for(var i = 0; i < width+1; i++) {
+        context.moveTo(x + (i*scale),y);
+        context.lineTo(x + (i*scale),y+height*scale);
+    }
+    for(var i = 0; i < height+1; i++) {
+        context.moveTo(x,y + (i*scale));
+        context.lineTo(x+width*scale,y + (i*scale));
+    }
+    context.stroke();
+}
 
-
+function drawSquare(x, y) {
+    context.beginPath(); 
+    context.moveTo(x,y);
+    context.lineTo(x+scale, y);
+    context.lineTo(x+scale, y+scale);
+    context.lineTo(x, y+scale);
+    context.closePath();
+    context.fill();
 }
 
 function draw(){
      context.clearRect(0,0,canvas.width,canvas.height);
+    var movingShape = new Shape(2,"red");
+    movingShape.drawShape(20,20);
+    movingShape.rotateLeft();
+    //Found how to set attribute here: 
+    //http://help.dottoro.com/ljgaxrgj.php
+    slider1.setAttribute ("max", 6);
+    drawGrid(20,50,20,10,20);
      switch(scene) {
          case 0:
-            drawFirstScene();
+          
         break;
          case 1:
-            drawChangingDiceBackground();
+            
         break;
      }
     frameCount++;
 }
+
 
 setInterval(draw, 200);
