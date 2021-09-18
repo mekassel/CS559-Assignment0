@@ -4,8 +4,9 @@ var context = canvas.getContext('2d');
 
 
 var frameCount = 0;
-var physicsUpdates = 0;
+var physicsUpdateCount = 0;
 var scene = 0;
+
 
 const targetFrameRate = 10;
 const physicsUpdateRate = 100;
@@ -15,13 +16,17 @@ const physicsUpdateRate = 100;
 const shapes = [
     [[[0,0],[0,1],[1,0],[1,1]]], //Square
     [[[0,0],[1,0],[2,0],[3,0]],[[0,0],[0,1],[0,2],[0,3]]], //Line
-    [[[0,0],[0,1],[0,2],[1,2]]], //L shape
+    [[[0,0],[0,1],[0,2],[1,2]],[[0,0],[1,0],[2,0],[0,1]],[[0,0],[1,0],[1,1],[1,2]],[[0,1],[1,1],[2,1],[2,0]]], //L shape
+    [[[1,0],[0,1],[0,2],[0,0]],[[0,0],[1,1],[2,1],[0,1]],[[0,2],[1,0],[1,1],[1,2]],[[0,0],[1,0],[2,1],[2,0]]], //J shape
+    [[[1,0],[0,1],[1,1],[2,1]],[[1,0],[0,1],[1,1],[1,2]],[[0,0],[1,0],[2,0],[1,1]],[[0,0],[0,1],[0,2],[1,1]]],//T shape
+    [[[1,0],[0,1],[1,1],[2,0]],[[0,0],[0,1],[1,1],[1,2]]], //S shape
+    [[[0,0],[1,0],[1,1],[2,1]],[[1,0],[0,1],[1,1],[0,2]]] //Z shape
 ];
 const colors = ["red","orange","yellow","green","blue","purple"]
 const scale = 20;
 const startXBoard = 20;
 const startYBoard = 20;
-const boardRows = 20;
+const boardRows = 24;
 const boardCols = 10;
 var board = new Array(boardCols);
 for(var i = 0; i < boardCols;i++){
@@ -121,8 +126,6 @@ function drawSquare(x, y) {
 }
 
 function drawBoard(){
-    drawGrid(startXBoard,startYBoard,boardRows,boardCols,scale);
-
     for(var row = 0; row < boardRows; row++) {
         for (var col = 0; col < boardCols; col++) {
             if(board[col][row] != -1) {
@@ -131,16 +134,15 @@ function drawBoard(){
             }
         }
     }
+    drawGrid(startXBoard,startYBoard,boardRows,boardCols,scale);
 }
-var movingShape = new Shape(1,"red");
+
 function draw(){
-     context.clearRect(0,0,canvas.width,canvas.height);
-    console.log("UPDATE");
-    movingShape.drawShape(startXBoard+slider1.value*scale,startYBoard+Math.floor(frameCount/2)*scale);
+    context.clearRect(0,0,canvas.width,canvas.height);
+    movingShape.drawShape(startXBoard+slider1.value*scale,startYBoard+Math.floor(physicsUpdateCount/40)*scale);
     drawBoard();
     //movingShape.rotateLeft();
-    //Found how to set attribute here: 
-    //http://help.dottoro.com/ljgaxrgj.php
+    
     
     
     
@@ -156,16 +158,22 @@ function draw(){
 }
 
 function fixedUpdate(){
-    //slider1.value = 1;
+    
+    //Found how to set attribute here: 
+    //http://help.dottoro.com/ljgaxrgj.php
     slider1.setAttribute ("max", 10-movingShape.width);
+    physicsUpdateCount++;
 }
 
 function rotateLeft(){
     movingShape.rotateLeft();
 }
 function rotateRight(){
-    movingShape.rotateLeft();
+    movingShape.rotateRight();
 }
+
+
+var movingShape = new Shape(6,"red");
 setInterval(fixedUpdate, 10);
 setInterval(draw, 200);
 leftButton.addEventListener('click', rotateLeft);
