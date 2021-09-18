@@ -7,10 +7,11 @@ var frameCount = 0;
 var scene = 0;
 var scale = 20;
 var   shapes = [
-    [[0,0],[0,1],[1,0],[1,1]], //Square
-    [[0,0],[1,0],[2,0],[3,0]], //Line
+    [[[0,0],[0,1],[1,0],[1,1]]], //Square
+    [[[0,0],[1,0],[2,0],[3,0]],[[0,0],[0,1],[0,2],[0,3]]], //Line
     [[0,0],[0,1],[0,2],[1,2]], //L shape
 ];
+
 //Found how to create classes here:
 //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
 class Shape {
@@ -19,36 +20,25 @@ class Shape {
    constructor(type, color) {
     this.squares = shapes[type];
     this.color = color;
-    this.rotateStep = false;
+    this.rotationState = 0;
   }
 
     drawShape(x, y) {
         context.strokeStyle=this.color;
         context.fillStyle = this.color;
-        for(var i = 0; i < this.squares.length;i++) {
-            drawSquare(x + scale*this.squares[i][0],y + scale*this.squares[i][1]);
+        for(var i = 0; i < this.squares[this.rotationState].length;i++) {
+            drawSquare(x + scale*this.squares[this.rotationState][i][0],y + scale*this.squares[this.rotationState][i][1]);
         }
    }
 
-   rotateLeft() {
-       if(this.rotateStep) {
-            for(var i = 0; i < this.squares.length;i++) {
-                var temp = this.squares[i];
-                this.squares[i] = [temp[1],temp[0]];
-            }
-        } else {
-            for(var i = 0; i < this.squares.length;i++) {
-                var temp = this.squares[i];
-                this.squares[i] = [2-temp[0],3-temp[1]];
-            }
+   rotateLeft(){
+       this.rotationState--;
+        if(this.rotationState < 0) {
+            this.rotationState = this.squares.length - 1;
         }
-        this.rotateStep = !this.rotateStep;
    }
 
-   rotateRight() {
-
-   }
-
+  
    getWidth() {
        var width = 0;
 
@@ -79,10 +69,10 @@ function drawSquare(x, y) {
     context.closePath();
     context.fill();
 }
-
+var movingShape = new Shape(1,"red");
 function draw(){
      context.clearRect(0,0,canvas.width,canvas.height);
-    var movingShape = new Shape(2,"red");
+    
     movingShape.drawShape(20,20);
     movingShape.rotateLeft();
     //Found how to set attribute here: 
