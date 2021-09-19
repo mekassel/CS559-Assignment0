@@ -37,7 +37,7 @@ var physicsUpdateCount = 0;
 var currentHeight = 0;
 var currentPose = boardCols/2;
 var currentPhysicsUpdates = 0;
-var updateSpeed = 10; //Physics frames per update. 
+var updateSpeed = 40; //Physics frames per update. 
 
 //Found how to create classes here:
 //https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
@@ -160,6 +160,14 @@ function setShape(shape) {
         board[shape.getSquares()[i][0]+currentPose][shape.getSquares()[i][1]+currentHeight] = shape.color;
     }
 }
+
+function updateSliderMaxValue(){
+    //Set the sliders maximum value to 10 - the width of the moving shape.
+    //This ensures that the user cannot put the piece off of the board.
+    //Found how to set attribute here: 
+    //http://help.dottoro.com/ljgaxrgj.php
+    slider1.setAttribute ("max", boardCols-movingShape.width);
+}
 function fixedUpdate(){
     if(canMove(movingShape,parseInt(slider1.value),currentHeight)) {
         currentPose = parseInt(slider1.value);
@@ -171,6 +179,7 @@ function fixedUpdate(){
         if(!canMove(movingShape,currentPose,currentHeight+1)) {
             setShape(movingShape);
             movingShape = new Shape(parseInt(Math.random()*7), parseInt(Math.random()*5));
+            updateSliderMaxValue();
             currentHeight = 0;
             if(!canMove(movingShape,currentPose,currentHeight)) {
                 console.log("GameOver");
@@ -185,11 +194,7 @@ function fixedUpdate(){
     }
 
 
-    //Set the sliders maximum value to 10 - the width of the moving shape.
-    //This ensures that the user cannot put the piece off of the board.
-    //Found how to set attribute here: 
-    //http://help.dottoro.com/ljgaxrgj.php
-    slider1.setAttribute ("max", 10-movingShape.width);
+    
     physicsUpdateCount++;
     currentPhysicsUpdates++;
 }
@@ -198,29 +203,26 @@ function fixedUpdate(){
 function rotateLeft(){
     var width = movingShape.width;
     movingShape.rotateLeft();
-    if(movingShape.width > width) {
-        currentPose = movingShape.width - width;
-    }
+    currentPose = Math.min(boardCols-movingShape.width,width);
+    
     if(!canMove(movingShape,currentPose,currentHeight)) {
         movingShape.rotateRight();
     }
+    updateSliderMaxValue();
 }
 function rotateRight(){
     var width = movingShape.width;
     movingShape.rotateRight();
-    var difference = movingShape.width - width;
-    if(difference > 0) {
-        
-        currentPose = currentPose - difference;
-        slider1.value = slider1.value - difference;
-    }
+    currentPose = Math.min(boardCols-movingShape.width,width);
     if(!canMove(movingShape,currentPose,currentHeight)) {
         movingShape.rotateLeft();
     }
+    updateSliderMaxValue();
 }
 
 
 var movingShape = new Shape(6,2);
+updateSliderMaxValue();
 setInterval(fixedUpdate, 10);
 setInterval(draw, 200);
 leftButton.addEventListener('click', rotateLeft);
