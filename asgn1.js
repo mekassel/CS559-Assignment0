@@ -17,17 +17,17 @@ const shapes = [
     [[[1,0],[0,1],[1,1],[2,0]],[[0,0],[0,1],[1,1],[1,2]]], //S shape
     [[[0,0],[1,0],[1,1],[2,1]],[[1,0],[0,1],[1,1],[0,2]]] //Z shape
 ];
-const colors = ["red","orange","yellow","green","blue","purple"]
+const colors = ["red","orange","green","blue","purple"]
 const scale = 20;
 const startXBoard = 20;
-const startYBoard = 20;
+const startYBoard = 30;
 const boardRows = 24;
 const boardCols = 10;
 
-var board = new Array(boardCols);
-for(var i = 0; i < boardCols;i++){
-    board[i] = new Array(boardRows);
-    for(var j = 0; j < boardRows; j++) {
+var board = new Array(boardRows);
+for(var i = 0; i < boardRows;i++){
+    board[i] = new Array(boardCols);
+    for(var j = 0; j < boardCols; j++) {
         board[i][j] = -1;
     }
 }
@@ -128,8 +128,8 @@ function drawSquare(x, y) {
 function drawBoard(){
     for(var row = 0; row < boardRows; row++) {
         for (var col = 0; col < boardCols; col++) {
-            if(board[col][row] != -1) {
-                setColor(board[col][row]);
+            if(board[row][col] != -1) {
+                setColor(board[row][col]);
                 drawSquare(startXBoard + col * scale, startYBoard + row * scale);
             }
         }
@@ -149,7 +149,7 @@ function canMove(shape, x, y) {
     if(currentHeight + shape.height >= boardRows)
         return false;
     for(var i = 0; i < movingShape.getSquares().length; i++) {
-        if(board[movingShape.getSquares()[i][0]+x][movingShape.getSquares()[i][1]+y] != -1) {
+        if(board[movingShape.getSquares()[i][1]+y][movingShape.getSquares()[i][0]+x]!= -1) {
             return false;
         }
     }
@@ -157,7 +157,7 @@ function canMove(shape, x, y) {
 }
 function setShape(shape) {
    for(var i = 0; i < shape.getSquares().length; i++) {
-        board[shape.getSquares()[i][0]+currentPose][shape.getSquares()[i][1]+currentHeight] = shape.color;
+        board[shape.getSquares()[i][1]+currentHeight][shape.getSquares()[i][0]+currentPose] = shape.color;
     }
 }
 
@@ -168,22 +168,63 @@ function updateSliderMaxValue(){
     //http://help.dottoro.com/ljgaxrgj.php
     slider1.setAttribute ("max", boardCols-movingShape.width);
 }
+
+function checkForFullLine(){
+    var rowsToClear = new Array();
+    for(var row = 0; row < boardRows; row++) {
+        for(var col = 0; col < boardCols; col++){
+            if(board[row][col] == -1)
+                break;
+            if(col == boardCols-1){
+                rowsToClear.push(row);
+                console.log("Row to clear!");
+            }
+        }
+    }
+    if(rowsToClear.length == 0)
+        return;
+    board.splice(rowsToClear[0],rowsToClear.length);
+    for(var i = 0; i < rowsToClear.length; i++) {
+        board.unshift(new Array(boardCols));
+        for(var j = 0; j < boardCols;j++){
+            board[0][j] = -1;
+        }
+    }
+ 
+    if(updateSpeed > 30){
+        updateSpeed -= rowsToClear.length * 0.8;
+    } else if(updateSpeed > 20) {
+        updateSpeed -= rowsToClear.length * 0.4;
+    } else if (updateSpeed > 10) {
+        updateSpeed -= rowsToClear.length * 0.2;
+    } else if (updateSpeed > 10) {
+        updateSpeed -= rowsToClear.length * 0.1;
+    }
+}
+
+function dropShape(){
+    setShape(movingShape);
+    checkForFullLine();
+    movingShape = new Shape(parseInt(Math.random()*7), parseInt(Math.random()*5));
+    updateSliderMaxValue();
+    currentHeight = 0;
+    if(!canMove(movingShape,currentPose,currentHeight)) {
+        console.log("GameOver");
+    }
+    
+}
 function fixedUpdate(){
+    //move sideways using slider, if possible.
     if(canMove(movingShape,parseInt(slider1.value),currentHeight)) {
         currentPose = parseInt(slider1.value);
     }
+
     if(currentPhysicsUpdates >= updateSpeed) {
         currentPhysicsUpdates = 0;
         
-
+        //Check if you can not move down
         if(!canMove(movingShape,currentPose,currentHeight+1)) {
-            setShape(movingShape);
-            movingShape = new Shape(parseInt(Math.random()*7), parseInt(Math.random()*5));
-            updateSliderMaxValue();
-            currentHeight = 0;
-            if(!canMove(movingShape,currentPose,currentHeight)) {
-                console.log("GameOver");
-            }
+            dropShape();
         } else {
             currentHeight++;
         }
@@ -199,7 +240,6 @@ function fixedUpdate(){
     currentPhysicsUpdates++;
 }
 
-// ! issue with rotating objects and causing objects to spawn outside of grid
 function rotateLeft(){
     var width = movingShape.width;
     movingShape.rotateLeft();
@@ -220,10 +260,18 @@ function rotateRight(){
     updateSliderMaxValue();
 }
 
+function drop(){
+    while(canMove(movingShape,currentPose,currentHeight+1)){
+        currentHeight++;
+    }
+    dropShape();
+}
 
-var movingShape = new Shape(6,2);
+
+var movingShape = new Shape(parseInt(Math.random()*7), parseInt(Math.random()*5));
 updateSliderMaxValue();
 setInterval(fixedUpdate, 10);
 setInterval(draw, 200);
 leftButton.addEventListener('click', rotateLeft);
 rightButton.addEventListener('click', rotateRight);
+dropButton.addEventListener('click',drop);
