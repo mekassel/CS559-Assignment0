@@ -116,9 +116,24 @@ function drawNextShape() {
     nextShape.drawShape(230 + (110-nextShape.width*scale)/2,190 + (110-nextShape.height*scale)/2);
 }
 
-function draw() {
+function drawBackground(){
     //Clear screen
     context.clearRect(0, 0, canvas.width, canvas.height);
+    context.fillStyle = "#AAAAAA";
+    context.beginPath();
+    context.moveTo(0,0);
+    context.lineTo(canvas.width,0);
+    context.lineTo(canvas.width,canvas.height);
+    context.lineTo(0,canvas.height);
+    context.closePath();
+    context.fill();
+    context.stroke();
+}
+
+function draw() {
+    
+
+    drawBackground();
     drawNextShape();
     movingShape.drawShape(startXBoard + currentPose * scale, startYBoard + (currentHeight * scale));
     drawBoard();
