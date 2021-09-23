@@ -38,12 +38,12 @@ var currentHeight = 0;
 var currentPose = boardCols / 2;
 var currentPhysicsUpdates = 0;
 var updateSpeed = 40; //Physics frames per update. 
-var lastPosition = [-1, -1];
 var settledUpdates = 0; //Updates where you can't moved
-var maximumSettledUpdates = 30;
-var movingShape = Shape.getRandom();
-var nextShape = Shape.getRandom();
-
+var maximumSettledUpdates = 5; //The amount of updates that the shape has not moved
+var movingShape = Shape.getRandom(); //The current moving shape on the screen
+var nextShape = Shape.getRandom(); //The next shape
+var lastPosition = [currentPose,currentHeight]; //Last position of the settled update
+var score = 0;
 
 
 
@@ -68,12 +68,12 @@ function drawGrid(x, y, height, width) {
     context.stroke();
 }
 
-function drawSquare(x, y) {
+function drawSquare(x, y, size = scale) {
     context.beginPath();
     context.moveTo(x, y);
-    context.lineTo(x + scale, y);
-    context.lineTo(x + scale, y + scale);
-    context.lineTo(x, y + scale);
+    context.lineTo(x + size, y);
+    context.lineTo(x + size, y + size);
+    context.lineTo(x, y + size);
     context.closePath();
     context.fill();
     context.stroke();
@@ -130,11 +130,36 @@ function drawBackground(){
     context.stroke();
 }
 
+function drawScore(){
+    context.fillStyle = "grey";
+    context.strokeStyle = "black"
+    context.beginPath();
+    context.moveTo(230,60);
+    context.lineTo(230,130);
+    context.lineTo(340,130);
+    context.lineTo(340,60);
+    context.closePath();
+    context.fill();
+    context.stroke();
+    context.lineTo(230,85);
+    context.lineTo(340,85);
+    context.fill();
+    context.stroke();
+    context.fillStyle = "red";
+    context.font = '20px Arial';
+    context.textAlign = "center";
+    context.fillText('Score:', 285, 80);
+    context.font  = '25px Arial';
+    context.fillText(score, 285, 115);
+}
+
+
 function draw() {
     
 
     drawBackground();
     drawNextShape();
+    drawScore();
     movingShape.drawShape(startXBoard + currentPose * scale, startYBoard + (currentHeight * scale));
     drawBoard();
     //movingShape.rotateLeft();
@@ -183,12 +208,13 @@ function checkForFullLine() {
                 break;
             if (col == boardCols - 1) {
                 rowsToClear.push(row);
-                console.log("Row to clear!");
             }
         }
     }
     if (rowsToClear.length == 0)
         return;
+    console.log(rowsToClear.length)
+    score+= Math.pow(rowsToClear.length,2) * 1000;
     board.splice(rowsToClear[0], rowsToClear.length);
     for (var i = 0; i < rowsToClear.length; i++) {
         board.unshift(new Array(boardCols));
@@ -217,28 +243,60 @@ function dropShape() {
     currentHeight = 0;
     if (!canMove(movingShape, currentPose, currentHeight)) {
         console.log("GameOver");
+        updateSpeed = 10000000;
     }
 
 }
 
 function fixedUpdate() {
     //move sideways using slider, if possible, can move up one or two sides. 
-    if (canMove(movingShape, parseInt(slider1.value), currentHeight)) {
-        currentPose = parseInt(slider1.value);
-    } else if(canMove(movingShape, parseInt(slider1.value), currentHeight-1)) {
- currentPose = parseInt(slider1.value);
- currentHeight -= 1;
-    }
+    while(currentPose < parseInt(slider1.value)) {
+        currentPose++;
+        canShapeMove = false;
+        for (var addedHeight = 0; addedHeight < helpingHeight; addedHeight++) {
+            if(canMove(movingShape, currentPose, currentHeight-addedHeight)) {
+                canShapeMove = true;
+                currentHeight -= addedHeight;
+                break;
+            }
+        }
+        if(!canShapeMove) {
+            currentPose--;
+            break;
+        } 
+    } 
+
+    while(currentPose > parseInt(slider1.value)) {
+        currentPose--;
+        canShapeMove = false;
+        for (var addedHeight = 0; addedHeight < helpingHeight; addedHeight++) {
+            if(canMove(movingShape, currentPose, currentHeight-addedHeight)) {
+                canShapeMove = true;
+                currentHeight -= addedHeight;
+                break;
+            }
+        }
+        if(!canShapeMove) {
+            currentPose++;
+            break;
+        }
+    } 
+
 
     if (currentPhysicsUpdates >= updateSpeed) {
         currentPhysicsUpdates = 0;
 
         //Check if you can not move down
         if (!canMove(movingShape, currentPose, currentHeight + 1)) {
-            if(settledUpdates > maximumSettledUpdates) {
+            if(settledUpdates >= maximumSettledUpdates) {
                 dropShape();
             }
-            settledUpdates++;
+            if(lastPosition[0] == currentPose && lastPosition[1] == currentHeight){
+                settledUpdates++;
+            }else {
+                settledUpdates = 0;
+                lastPosition = [currentPose,currentHeight];
+            }
         } else {
             settledUpdates = 0;
             currentHeight++;
@@ -296,7 +354,9 @@ function rotateRight() {
 function drop() {
     while (canMove(movingShape, currentPose, currentHeight + 1)) {
         currentHeight++;
+        score+=10;
     }
+    console.log(score);
     dropShape();
 }
 
